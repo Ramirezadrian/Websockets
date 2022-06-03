@@ -13,8 +13,7 @@
 <body>
     <header>
         <nav class="nav">
-            <a class="nav-link" href="/api/productos/form">Form</a>
-            <a class="nav-link" href="/api/productos">Productos</a>
+
         </nav>
     </header>
     <main>
@@ -28,7 +27,7 @@
                     <th scope="col">Imagen</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="productsBody">
                     <% products.forEach((prod, index) => { %>
                   <tr>
                     <th scope="row"><%= index +1%></th>

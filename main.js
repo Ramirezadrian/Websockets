@@ -1,14 +1,20 @@
 const express = require('express')
-const { Router } = express
+const { Server: HttpServer } = require('http')
+const { Server: IOServer } = require('socket.io')
+
+//const { Router } = express
 const Contenedor = require('./contenedor.js')
-const app = express()
-const productsRouter = Router()
+
+
 const contenedor = new Contenedor('products.txt')
+
+const app = express()
+const httpServer = new HttpServer(app)
+const io = new IOServer(httpServer)
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use('/api/productos', productsRouter)
-app.use('',express.static(__dirname + 'public'))
+app.use(express.static('./public'))
 
 
 
@@ -28,7 +34,13 @@ server.on('error', error => console.log(`Error en servidor: ${error}`))
 
 
 
-productsRouter.get('', async (req,res) =>{
+io.on('connection', socket => {
+  console.log('Nuevo cliente conectado')
+
+
+})
+
+/* app.get('', async (req,res) =>{
   const products = await contenedor.getAll()
 
   const data ={
@@ -36,9 +48,9 @@ productsRouter.get('', async (req,res) =>{
   }
   return res.render('products', data) //EJS
 
-})
+}) */
 
-productsRouter.get('/form', async (req,res) =>{
+app.get('/', async (req,res) =>{
   const products = await contenedor.getAll()
   const data ={
     products
@@ -47,17 +59,7 @@ productsRouter.get('/form', async (req,res) =>{
 
 })
 
-productsRouter.get('/:id', async (req,res) =>{
-  const id = Number(req.params.id)
-  const product = await contenedor.getById(id)
-  
-if (product === undefined){
-  return res.status(404).json({error: 'Producto no encontrado'})
-}
-  return res.json(product)
-})
-
-productsRouter.post('', async (req, res) => {
+app.post('/', async (req, res) => {
   const product = {
     title: req.body.title,
     price: req.body.price,
@@ -66,11 +68,11 @@ productsRouter.post('', async (req, res) => {
  
   await contenedor.save(product)
 
-  return res.redirect('/api/productos/form') //EJS
+  return res.redirect('/') //EJS
  
 })
 
-productsRouter.put('/:id', async (req, res)=>{
+app.put('/:id', async (req, res)=>{
 
   const id = (Number(req.params.id))
   const products = await contenedor.getAll()
@@ -91,7 +93,7 @@ productsRouter.put('/:id', async (req, res)=>{
   return res.json(products)
 })
 
-productsRouter.delete('/:id', async (req,res)=>{
+app.delete('/:id', async (req,res)=>{
   const id = Number(req.params.id)
   const product = await contenedor.getById(id)
   console.log(product)
