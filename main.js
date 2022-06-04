@@ -1,12 +1,6 @@
 const express = require('express')
-const { Server: HttpServer } = require('http')
-const { Server: IOServer } = require('socket.io')
-
-//const { Router } = express
-const Contenedor = require('./contenedor.js')
-
-
-const contenedor = new Contenedor('products.txt')
+const {Server: HttpServer} =require('http')
+const {Server: IOServer} = require('socket.io')
 
 const app = express()
 const httpServer = new HttpServer(app)
@@ -14,43 +8,19 @@ const io = new IOServer(httpServer)
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+app.set('views','./views')
+app.set('view engine', 'ejs')
 app.use(express.static('./public'))
 
 
-
-// EJS
-app.set('views','./views')
-app.set('view engine', 'ejs')
-
+//const { Router } = express
+const Contenedor = require('./contenedor.js')
+const contenedor = new Contenedor('products.txt')
 
 
-const PORT = 8080
-
-const server = httpServer.listen(PORT, () => {
-  console.log(`Servidor HTTP escuchando en el puerto ${PORT}`)
-})
-
-server.on('error', error => console.log(`Error en servidor: ${error}`))
-
-
-io.on('connection', async (socket) => {
-  console.log('Nuevo cliente conectado')
-  const data = await contenedor.getAll()
-  
-  
-  console.log(data)
-  io.sockets.emit('products', data)
- 
-
-
-
-  })
-
-
-
-
-
- app.get('/products', async (req,res) =>{
+const messages = []
+app.get('/products', async (req,res) =>{
   const products = await contenedor.getAll()
 
   const data ={
@@ -80,37 +50,43 @@ app.post('/', async (req, res) => {
  
 })
 
-app.put('/:id', async (req, res)=>{
+const PORT = 8080
 
-  const id = (Number(req.params.id))
-  const products = await contenedor.getAll()
-  const productIndex = products.findIndex(product=> product.id === id)
+const server = httpServer.listen(PORT, () => {
+  console.log(`Servidor HTTP escuchando en el puerto ${PORT}`)
+})
 
-  if(productIndex === -1){
-  return res.status(404).json({error : 'Producto no encontrado'})
-  }
-  const body = req.body
+server.on('error', error => console.log(`Error en servidor: ${error}`))
 
-  products[productIndex].title = body.title
-  products[productIndex].price = body.price
-  products[productIndex].thumbnail = body.thumbnail 
+
+io.on('connection', async (socket) => {
+  console.log('Nuevo cliente conectado')
+
+  const data = await contenedor.getAll()
+  socket.emit('productos', data)
   
-  //cree esta funcion en contenedor.js para actualizar y no perder los id
-  await contenedor.update(products[productIndex])
+  socket.emit('join', messages)
+   
+  socket.on('messageInput', data => {
+
+    const now = new Date()
+
+    const message = {
+      user: data.user,
+      date: `${now.getDay()}/${now.getMonth()}/${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`,
+      text: data.text
+    }
+     
+    messages.push(message)
+    console.log(messages)
+   socket.emit('myMessage', message)
     
-  return res.json(products)
-})
+    socket.broadcast.emit('message', message)
+  })
 
-app.delete('/:id', async (req,res)=>{
-  const id = Number(req.params.id)
-  const product = await contenedor.getById(id)
-  console.log(product)
-  if(product === undefined){
-  return res.status(404).json({error: 'Producto no encontrado'})
-  }
-  await contenedor.deleteById(id)
-  return res.json(product)
 })
 
 
+
+ 
 

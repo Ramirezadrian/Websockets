@@ -22,17 +22,5 @@
     "price": "433",
     "thumbnail": "https://images.rappi.com.ar/products/1925549-1611692440278.png?d=200x200&?d=1920xundefined&e=webp",
     "id": 18
-  },
-  {
-    "title": "dsd",
-    "price": "sds",
-    "thumbnail": "sdsd",
-    "id": 19
-  },
-  {
-    "title": "23",
-    "price": "33",
-    "thumbnail": "33",
-    "id": 20
   }
 ]
