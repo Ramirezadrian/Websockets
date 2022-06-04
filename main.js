@@ -26,36 +26,44 @@ app.set('view engine', 'ejs')
 
 const PORT = 8080
 
-const server = app.listen(PORT, () => {
+const server = httpServer.listen(PORT, () => {
   console.log(`Servidor HTTP escuchando en el puerto ${PORT}`)
 })
 
 server.on('error', error => console.log(`Error en servidor: ${error}`))
 
 
-
-io.on('connection', socket => {
+io.on('connection', async (socket) => {
   console.log('Nuevo cliente conectado')
+  const data = await contenedor.getAll()
+  
+  
+  console.log(data)
+  io.sockets.emit('products', data)
+ 
 
 
-})
 
-/* app.get('', async (req,res) =>{
+  })
+
+
+
+
+
+ app.get('/products', async (req,res) =>{
   const products = await contenedor.getAll()
 
   const data ={
     products
   }
-  return res.render('products', data) //EJS
+  return res.json(products)
 
-}) */
+}) 
 
 app.get('/', async (req,res) =>{
-  const products = await contenedor.getAll()
-  const data ={
-    products
-  }
-  return res.render('form', data) //EJS
+
+  return res.render('form') //EJS
+
 
 })
 
